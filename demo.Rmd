@@ -1,0 +1,128 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+library(tidyverse)
+library(palmerpenguins)
+
+penguins_df <- penguins
+penguins_df
+```
+
+# Running a Chi Squared Test for Independence
+
+```{r}
+chisq.test(x = penguins_df$species, y = penguins_df$sex)
+```
+
+H_null: Penguin species and sex are independent H_alternative: Penguins
+species and sex are NOT independent
+
+Conclusion: We fail to reject the null hypothesis and conclude that
+penguins species and sex are independent
+
+# One Way ANOVA
+
+H_null: Means of all the groups are not different H_alternative: The
+mean of at least one of the groups is different
+
+## Descriptive Stats
+
+Interested in the flipper size of penguins
+
+```{r}
+penguins_df %>%
+  group_by(species) %>%
+  summarize(
+    mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE)
+  )
+```
+
+```{r}
+penguins_df %>%
+  ggplot() +
+    geom_boxplot(aes(y = species, x = flipper_length_mm, fill = species))
+```
+
+```{r}
+model <- aov(flipper_length_mm ~ species, data = penguins_df)
+summary(model)
+```
+
+H_null: Means of flipper lengths of all penguin species are not
+different H_alternative: The mean flipper length of at least one penguin
+species is different
+
+Conclusions: We reject the null hypothesis and conclude that the mean
+flipper length of at least one penguin species is different
+
+# Post Hoc Analysis
+
+```{r}
+gentoo_flippers <- penguins_df %>%
+  filter(species == "Gentoo", sex == "male") %>%
+  pull(flipper_length_mm)
+adelie_flippers <- penguins_df %>%
+  filter(species == "Adelie", sex == "male") %>%
+  pull(flipper_length_mm)
+chinstrap_flippers <- penguins_df %>%
+  filter(species == "Chinstrap", sex == "male") %>%
+  pull(flipper_length_mm)
+```
+
+```{r}
+gentoo_flippers
+```
+
+## Gentoo vs Adelie
+
+```{r}
+t.test(x = gentoo_flippers, y = adelie_flippers)
+```
+
+## Adelie vs Chinstrap
+
+```{r}
+t.test(x = chinstrap_flippers, y = adelie_flippers)
+```
+
+## Chinstrap vs Gentoo
+
+```{r}
+t.test(x = chinstrap_flippers, y = gentoo_flippers)
+```
+
+At a significance level of 0.05, the probability of a type I error for
+one is 0.05 For two tests, it would be 1 - (1 - 0.05)\^2 For 3 tests, it
+would be 1 - (1- 0.05)\^3
+
+```{r}
+ 1 - (1 - 0.05)^2
+```
+
+```{r}
+ 1 - (1 - 0.05)^3
+```
+
+Bonferroni Correction: Since we are doing 3 tests, we divide our
+significance level by 3 Instead of comparing p_value. to significance
+level for each test, compare p_value to significance_level/3 for each
+test
+
+```{r}
+0.05/3
+```
+
+# Two way ANOVA
+
+```{r}
+model <- aov(flipper_length_mm ~ species * sex, data = penguins_df)
+summary(model)
+```
+
+### 
